@@ -18,6 +18,7 @@ SRCREV = "7c55ded8bb99ebdf7e39e6a6026a1838ab05aa99"
 SRC_URI = "\
 	git://github.com/balena-os/balena-engine.git;branch=${BALENA_BRANCH};destsuffix=git/src/import;protocol=https \
     file://balena-tmpfiles.conf \
+    file://0001-dynbinary-use-go-cross-compiler.patch \
 	"
 
 S = "${WORKDIR}/git"
@@ -109,17 +110,17 @@ do_compile() {
 	export DOCKER_BUILDTAGS="no_buildkit no_btrfs no_cri no_devmapper no_zfs exclude_disk_quota exclude_graphdriver_btrfs exclude_graphdriver_devicemapper exclude_graphdriver_zfs"
 	export DOCKER_LDFLAGS="-s"
 
-	VERSION=${BALENA_VERSION} ./hack/make.sh dynbinary-balena
+	VERSION=${BALENA_VERSION} GO111MODULE=auto ./hack/make.sh dynbinary-daemon .binary-symlinks
 
 	# Compile mobynit
 	cd .gopath/src/"${DOCKER_PKG}"/cmd/mobynit
-	go build -ldflags '-extldflags "-static ${MOBYNIT_EXTRA_LDFLAGS}"' .
+	GO111MODULE=auto go build -ldflags '-extldflags "-static ${MOBYNIT_EXTRA_LDFLAGS}"' .
 	cd -
 }
 
 do_install() {
 	mkdir -p ${D}/${bindir}
-	install -m 0755 ${S}/src/import/bundles/dynbinary-balena/balena-engine ${D}/${bindir}/balena-engine
+	install -m 0755 ${S}/src/import/bundles/dynbinary-daemon/balena-engine ${D}/${bindir}/balena-engine
 	# install -d ${D}/boot
 	# install -m 0755 ${S}/src/import/cmd/mobynit/mobynit ${D}/boot/init
 	# echo ${BALENA_STORAGE} > ${D}/boot/storage-driver
