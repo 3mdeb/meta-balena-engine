@@ -11,14 +11,14 @@ LIC_FILES_CHKSUM = "file://src/import/LICENSE;md5=4859e97a9c7780e77972d989f0823f
 
 inherit systemd go pkgconfig useradd
 
-BALENA_VERSION = "19.03.13-dev"
+BALENA_VERSION = "20.10.40"
 BALENA_BRANCH= "master"
 
-SRCREV = "074a481789174b4b6fd2d706086e8ffceb72e924"
+SRCREV = "7c55ded8bb99ebdf7e39e6a6026a1838ab05aa99"
 SRC_URI = "\
-	git://github.com/balena-os/balena-engine.git;branch=${BALENA_BRANCH};destsuffix=git/src/import \
-	file://0001-imporve-hardcoded-CC-on-cross-compile-docker-ce.patch \
-        file://balena-tmpfiles.conf \
+	git://github.com/balena-os/balena-engine.git;branch=${BALENA_BRANCH};destsuffix=git/src/import;protocol=https \
+    file://balena-tmpfiles.conf \
+    file://0001-dynbinary-use-go-cross-compiler.patch \
 	"
 
 S = "${WORKDIR}/git"
@@ -29,22 +29,22 @@ SECURITY_CFLAGS = "${SECURITY_NOPIE_CFLAGS}"
 SECURITY_LDFLAGS = ""
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "balena-engine.service balena-engine.socket"
+SYSTEMD_SERVICE:${PN} = "balena-engine.service balena-engine.socket"
 GO_IMPORT = "import"
 USERADD_PACKAGES = "${PN}"
-GROUPADD_PARAM_${PN} = "-r balena-engine"
+GROUPADD_PARAM:${PN} = "-r balena-engine"
 
-DEPENDS_append_class-target = " systemd"
-RDEPENDS_${PN}_class-target = "curl util-linux iptables tini systemd bash"
-RRECOMMENDS_${PN} += "kernel-module-nf-nat kernel-module-br-netfilter kernel-module-nf-conntrack-netlink kernel-module-xt-masquerade kernel-module-xt-addrtype"
+DEPENDS:append:class-target = " systemd"
+RDEPENDS:${PN}:class-target = "curl util-linux iptables tini systemd bash"
+RRECOMMENDS:${PN} += "kernel-module-nf-nat kernel-module-br-netfilter kernel-module-nf-conntrack-netlink kernel-module-xt-masquerade kernel-module-xt-addrtype"
 
 # oe-meta-go recipes try to build go-cross-native
-DEPENDS_remove_class-native = "go-cross-native"
-DEPENDS_append_class-native = " go-native"
+DEPENDS:remove:class-native = "go-cross-native"
+DEPENDS:append:class-native = " go-native"
 
-INSANE_SKIP_${PN} += "already-stripped"
+INSANE_SKIP:${PN} += "already-stripped"
 
-FILES_${PN} += " \
+FILES:${PN} += " \
 	/lib/systemd/system/* \
 	/home/root \
 	/boot/init \
@@ -110,17 +110,17 @@ do_compile() {
 	export DOCKER_BUILDTAGS="no_buildkit no_btrfs no_cri no_devmapper no_zfs exclude_disk_quota exclude_graphdriver_btrfs exclude_graphdriver_devicemapper exclude_graphdriver_zfs"
 	export DOCKER_LDFLAGS="-s"
 
-	VERSION=${BALENA_VERSION} ./hack/make.sh dynbinary-balena
+	VERSION=${BALENA_VERSION} GO111MODULE=auto ./hack/make.sh dynbinary-daemon .binary-symlinks
 
 	# Compile mobynit
 	cd .gopath/src/"${DOCKER_PKG}"/cmd/mobynit
-	go build -ldflags '-extldflags "-static ${MOBYNIT_EXTRA_LDFLAGS}"' .
+	GO111MODULE=auto go build -ldflags '-extldflags "-static ${MOBYNIT_EXTRA_LDFLAGS}"' .
 	cd -
 }
 
 do_install() {
 	mkdir -p ${D}/${bindir}
-	install -m 0755 ${S}/src/import/bundles/dynbinary-balena/balena-engine ${D}/${bindir}/balena-engine
+	install -m 0755 ${S}/src/import/bundles/dynbinary-daemon/balena-engine ${D}/${bindir}/balena-engine
 	# install -d ${D}/boot
 	# install -m 0755 ${S}/src/import/cmd/mobynit/mobynit ${D}/boot/init
 	# echo ${BALENA_STORAGE} > ${D}/boot/storage-driver
