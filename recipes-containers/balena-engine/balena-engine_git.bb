@@ -128,7 +128,7 @@ do_install() {
 	ln -sf balena-engine ${D}/${bindir}/balena
 	ln -sf balena-engine ${D}/${bindir}/balenad
 	ln -sf balena-engine ${D}/${bindir}/balena-containerd
-	ln -sf balena-engine ${D}/${bindir}/balena-containerd-shim
+	ln -sf balena-engine ${D}/${bindir}/balena-containerd-shim-runc-v2
 	ln -sf balena-engine ${D}/${bindir}/balena-containerd-ctr
 	ln -sf balena-engine ${D}/${bindir}/balena-runc
 	ln -sf balena-engine ${D}/${bindir}/balena-proxy
