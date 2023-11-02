@@ -15,11 +15,12 @@ BALENA_VERSION = "20.10.40"
 BALENA_BRANCH= "master"
 
 SRCREV = "7c55ded8bb99ebdf7e39e6a6026a1838ab05aa99"
-SRC_URI = "\
-	git://github.com/balena-os/balena-engine.git;branch=${BALENA_BRANCH};destsuffix=git/src/import;protocol=https \
+SRC_URI = " \
+    git://github.com/balena-os/balena-engine.git;branch=${BALENA_BRANCH};destsuffix=git/src/import;protocol=https \
     file://balena-tmpfiles.conf \
     file://0001-dynbinary-use-go-cross-compiler.patch \
-	"
+    file://0001-Fix-http-invalid-Host-header-error.patch;patchdir=${S}/src/import/ \
+"
 
 S = "${WORKDIR}/git"
 
